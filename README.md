@@ -21,4 +21,4 @@ This project simulates a real-time e-commerce data processing pipeline using Apa
 │   ├── kafka_to_postgres.py
 │   ├── tablecreation_postgre.sql
 │   ├── normalisation_population.sql
-│   └── data_analysis.sql
+└── analysis.sql
