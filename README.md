@@ -24,9 +24,8 @@ This project simulates a real-time e-commerce data processing pipeline using Apa
 └── analysis.sql
 ```
 
-Start Kafka
------------
 
+##Start Kafka
 ### 1\. Download Kafka
 
 -   Visit the [Apache Kafka website](https://kafka.apache.org/downloads).
@@ -40,17 +39,10 @@ Start Kafka
 
 -   Kafka is written in Java, so you need to have Java installed on your machine.
 -   To check if Java is installed and determine its version, open a terminal (Command Prompt or PowerShell on Windows, Terminal app on macOS, or shell on Linux/Unix) and run:
-
-bash
-
-Copy code
-
 `java -version`
 
-* * * * *
 
-Configuration
--------------
+##Configuration
 
 ### 1\. Open the Kafka `config` folder
 
@@ -79,10 +71,8 @@ Configuration
 
 With these configurations, you have set up the basic directory structure that Kafka and ZooKeeper will use for storing data.
 
-* * * * *
 
-Start Services
---------------
+##Start Services
 
 ### 1\. Start Zookeeper Service
 
@@ -95,11 +85,6 @@ Zookeeper is a centralized service for maintaining configuration information, na
 -   Run the Zookeeper server using the following command:
 
 For Windows:
-
-bash
-
-Copy code
-
 `.\bin\windows\zookeeper-server-start.bat .\config\zookeeper.properties`
 
 ### 2\. Start Kafka Service
@@ -111,17 +96,10 @@ Copy code
 -   Start the Kafka server using the following command:
 
 For Windows:
-
-bash
-
-Copy code
-
 `.\bin\windows\kafka-server-start.bat .\config\server.properties`
 
-* * * * *
 
-Creating Staging Tables in PostgreSQL
--------------------------------------
+##Creating Staging Tables in PostgreSQL
 
 Before ingesting data, staging tables need to be created in PostgreSQL to store the raw data from Kafka topics. The staging tables reflect the schema of the incoming data and act as an intermediary storage layer before the data is normalized.
 
@@ -130,27 +108,19 @@ Before ingesting data, staging tables need to be created in PostgreSQL to store 
 -   The SQL script `tablecreation_postgre.sql` in the `/data_pipeline` directory contains the necessary commands to create staging tables for all the Kafka topics.
 -   Connect to your PostgreSQL database using a tool like pgAdmin or psql and run the script to create the tables.
 
-* * * * *
 
-Creating Topics
----------------
+##Creating Topics
 
 ### 1\. Create New Topics
 
 Use the `kafka-topics.sh` script to create new topics. Run these commands in a new command prompt window. For example, to create a topic named `distribution_centers`, you would use:
 
-bash
-
-Copy code
-
 `kafka-topics.sh --create --topic distribution_centers --bootstrap-server localhost:9092 --partitions 1 --replication-factor 1`
 
 Repeat this step to create all the necessary topics corresponding to the data sources.
 
-* * * * *
 
-Ingesting Data from CSV
------------------------
+##Ingesting Data from CSV
 
 Each Kafka producer script in the `/data_ingestion` directory is responsible for reading data from a specific CSV file and sending it to the corresponding Kafka topic.
 
@@ -168,10 +138,8 @@ You'll need to replace `YOUR_BOOTSTRAP_SERVER` with the actual address of your K
 
 Refer to the Python scripts in the `/data_ingestion` folder for the actual implementation.
 
-* * * * *
 
-Connection to PostgreSQL
-------------------------
+##Connection to PostgreSQL
 
 The script `kafka_to_postgres.py` in the `/data_pipeline` directory will:
 
