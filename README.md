@@ -72,7 +72,7 @@ This project simulates a real-time e-commerce data processing pipeline using Apa
 With these configurations, you have set up the basic directory structure that Kafka and ZooKeeper will use for storing data.
 
 
-##Start Services
+## Start Services
 
 ### 1\. Start Zookeeper Service
 
@@ -120,7 +120,7 @@ Use the `kafka-topics.sh` script to create new topics. Run these commands in a n
 Repeat this step to create all the necessary topics corresponding to the data sources.
 
 
-##Ingesting Data from CSV
+## Ingesting Data from CSV
 
 Each Kafka producer script in the `/data_ingestion` directory is responsible for reading data from a specific CSV file and sending it to the corresponding Kafka topic.
 
@@ -139,7 +139,7 @@ You'll need to replace `YOUR_BOOTSTRAP_SERVER` with the actual address of your K
 Refer to the Python scripts in the `/data_ingestion` folder for the actual implementation.
 
 
-##Connection to PostgreSQL
+## Connection to PostgreSQL
 
 The script `kafka_to_postgres.py` in the `/data_pipeline` directory will:
 
