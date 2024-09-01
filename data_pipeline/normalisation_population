@@ -1,0 +1,184 @@
+CREATE SCHEMA ecommerce;
+
+CREATE TABLE ecommerce.users (
+    id BIGINT PRIMARY KEY,
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    email VARCHAR(255),
+    age INT,
+    gender CHAR(1)
+);
+
+CREATE TABLE ecommerce.locations (
+    location_id INT PRIMARY KEY,
+    city VARCHAR(255) NULL,
+    state VARCHAR(255) NULL,
+    postal_code VARCHAR(20) NULL,
+    country VARCHAR(255) NULL,
+    latitude NUMERIC(10, 6),
+    longitude NUMERIC(10, 6)
+);
+
+CREATE TABLE ecommerce.events (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT REFERENCES ecommerce.users(id),
+    session_id UUID,
+    created_at TIMESTAMPTZ,
+    location_id INT REFERENCES ecommerce.locations(location_id)
+);
+
+
+CREATE TABLE ecommerce.distribution_centers (
+    id INT PRIMARY KEY,
+    name VARCHAR(255),
+    location_id INT REFERENCES ecommerce.locations(location_id)
+);
+
+
+CREATE TABLE ecommerce.products (
+    id BIGINT PRIMARY KEY,
+    name VARCHAR(255),
+    category VARCHAR(255),
+    brand VARCHAR(255),
+    retail_price NUMERIC,
+    cost NUMERIC,
+    department VARCHAR(255),
+    sku UUID
+);
+
+
+CREATE TABLE ecommerce.inventory_items (
+    id BIGINT PRIMARY KEY,
+    product_id BIGINT REFERENCES ecommerce.products(id),
+    distribution_center_id INT REFERENCES ecommerce.distribution_centers(id),
+    created_at TIMESTAMPTZ,
+    sold_at TIMESTAMPTZ NULL,
+    cost NUMERIC(20, 12)
+);
+
+
+CREATE TABLE ecommerce.orders (
+    order_id BIGINT PRIMARY KEY,
+    user_id BIGINT REFERENCES ecommerce.users(id),
+    status VARCHAR(50),
+    created_at TIMESTAMPTZ,
+    shipped_at TIMESTAMPTZ NULL,
+    delivered_at TIMESTAMPTZ NULL,
+    returned_at TIMESTAMPTZ NULL,
+    num_of_items INT
+);
+
+
+CREATE TABLE ecommerce.order_items (
+    id BIGINT PRIMARY KEY,
+    order_id BIGINT REFERENCES ecommerce.orders(order_id),
+    product_id BIGINT REFERENCES ecommerce.products(id),
+    inventory_item_id BIGINT REFERENCES ecommerce.inventory_items(id),
+    status VARCHAR(50),
+    sale_price NUMERIC(20, 12)
+);
+
+CREATE TABLE ecommerce.user_locations (
+    user_id BIGINT REFERENCES ecommerce.users(id),
+    location_id INT REFERENCES ecommerce.locations(location_id),
+    PRIMARY KEY (user_id, location_id)
+);
+
+
+CREATE TABLE ecommerce.event_metadata (
+    event_id BIGINT REFERENCES ecommerce.events(id),
+    ip_address INET,
+    browser VARCHAR(255),
+    traffic_source VARCHAR(255),
+    uri VARCHAR(255),
+    PRIMARY KEY (event_id)
+);
+
+
+
+-------------------------------
+--populating tables
+
+
+
+-- Populate users table
+INSERT INTO ecommerce.users (id, first_name, last_name, email, age, gender)
+SELECT id, first_name, last_name, email, age, gender::CHAR(1)
+FROM public.users
+ON CONFLICT (id) DO NOTHING;
+
+-- Populate locations table
+INSERT INTO ecommerce.locations (location_id, city, state, postal_code, country, latitude, longitude)
+SELECT id, city, state, postal_code, country, latitude, longitude
+FROM public.users
+ON CONFLICT (location_id) DO NOTHING;
+
+-- Populate events table
+INSERT INTO ecommerce.events (id, user_id, session_id, created_at, location_id)
+SELECT e.id, e.user_id, e.session_id, e.created_at, l.location_id
+FROM public.events e
+JOIN public.users u ON e.user_id = u.id
+JOIN ecommerce.locations l ON (u.city = l.city AND u.state = l.state AND u.postal_code = l.postal_code AND u.country = l.country)
+ON CONFLICT (id) DO NOTHING;
+
+
+-- Populate distribution_centers table
+INSERT INTO ecommerce.distribution_centers (id, name, location_id)
+SELECT id, name, id AS location_id
+FROM public.distribution_centers
+ON CONFLICT (id) DO NOTHING;
+
+-- Populate products table
+INSERT INTO ecommerce.products (id, name, category, brand, retail_price, cost, department, sku)
+SELECT id, product_name, product_category, product_brand, product_retail_price, cost, product_department, product_sku
+FROM public.inventory_items
+ON CONFLICT (id) DO NOTHING;
+
+-- Populate inventory_items table
+INSERT INTO ecommerce.inventory_items (id, product_id, distribution_center_id, created_at, sold_at, cost)
+SELECT ii.id, ii.product_id, ii.product_distribution_center_id, ii.created_at, ii.sold_at, ii.cost
+FROM public.inventory_items ii
+LEFT JOIN ecommerce.products p ON ii.product_id = p.id
+WHERE p.id IS NOT NULL  -- Only insert if the product_id exists in products table
+ON CONFLICT (id) DO NOTHING;
+
+
+-- Populate orders table
+INSERT INTO ecommerce.orders (order_id, user_id, status, created_at, shipped_at, delivered_at, returned_at, num_of_items)
+SELECT order_id, user_id, status, created_at, shipped_at, delivered_at, returned_at, COUNT(*) OVER (PARTITION BY order_id)
+FROM public.order_items
+ON CONFLICT (order_id) DO NOTHING;
+
+-- Populate order_items table
+INSERT INTO ecommerce.order_items (id, order_id, product_id, inventory_item_id, status, sale_price)
+SELECT oi.id, oi.order_id, oi.product_id, oi.inventory_item_id, oi.status, oi.sale_price
+FROM public.order_items oi
+LEFT JOIN ecommerce.orders o ON oi.order_id = o.order_id
+LEFT JOIN ecommerce.products p ON oi.product_id = p.id
+LEFT JOIN ecommerce.inventory_items ii ON oi.inventory_item_id = ii.id
+WHERE o.order_id IS NOT NULL AND 
+      p.id IS NOT NULL AND 
+      ii.id IS NOT NULL  -- Only insert if the inventory_item_id exists in inventory_items table
+ON CONFLICT (id) DO NOTHING;
+
+
+
+-- Populate user_locations table (if multiple locations per user are allowed in the staging data)
+INSERT INTO ecommerce.user_locations (user_id, location_id)
+SELECT DISTINCT u.id AS user_id, l.location_id
+FROM public.users u
+JOIN ecommerce.locations l
+  ON (u.latitude = l.latitude AND u.longitude = l.longitude)
+WHERE u.latitude IS NOT NULL AND u.longitude IS NOT NULL
+ON CONFLICT (user_id, location_id) DO NOTHING;
+
+
+-- Populate event_metadata table
+INSERT INTO ecommerce.event_metadata (event_id, ip_address, browser, traffic_source, uri)
+SELECT em.id AS event_id, em.ip_address, em.browser, em.traffic_source, em.uri
+FROM public.events em
+JOIN ecommerce.events e ON em.id = e.id
+WHERE em.id IS NOT NULL
+ON CONFLICT (event_id) DO NOTHING;
+
+

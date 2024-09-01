@@ -1,0 +1,102 @@
+CREATE TABLE distribution_centers (
+    id INT PRIMARY KEY,
+    name VARCHAR(255),
+    latitude NUMERIC(20,12),
+    longitude NUMERIC(20,12)
+);
+
+CREATE TABLE events (
+    id BIGINT PRIMARY KEY,
+    user_id BIGINT,
+    sequence_number INT,
+    session_id UUID,
+    created_at TIMESTAMPTZ,
+    ip_address INET,
+    city VARCHAR(255),
+    state VARCHAR(255),
+    postal_code VARCHAR(20),
+    browser VARCHAR(50),
+    traffic_source VARCHAR(50),
+    uri VARCHAR(255)
+);
+
+
+CREATE TABLE inventory_items (
+    id BIGINT PRIMARY KEY,
+    product_id BIGINT,
+    created_at TIMESTAMPTZ,
+    sold_at TIMESTAMPTZ,
+    cost NUMERIC(20,12),
+    product_category VARCHAR(255),
+    product_name VARCHAR(255),
+    product_brand VARCHAR(255),
+    product_retail_price NUMERIC(20,12),
+    product_department VARCHAR(255),
+    product_sku UUID,
+    product_distribution_center_id INT
+);
+
+
+CREATE TABLE order_items (
+    id BIGINT PRIMARY KEY,
+    order_id BIGINT,
+    user_id BIGINT,
+    product_id BIGINT,
+    inventory_item_id BIGINT,
+    status VARCHAR(50),
+    created_at TIMESTAMPTZ,
+    shipped_at TIMESTAMPTZ NULL,
+    delivered_at TIMESTAMPTZ NULL,
+    returned_at TIMESTAMPTZ NULL,
+    sale_price NUMERIC(20,12)
+);
+
+
+CREATE TABLE orders (
+    order_id BIGINT PRIMARY KEY,
+    user_id BIGINT,
+    status VARCHAR(50),
+    gender CHAR(1),
+    created_at TIMESTAMPTZ,
+    returned_at TIMESTAMPTZ NULL,
+    shipped_at TIMESTAMPTZ NULL,
+    delivered_at TIMESTAMPTZ NULL,
+    num_of_items INT
+);
+
+
+CREATE TABLE products (
+    id BIGINT PRIMARY KEY,
+    cost NUMERIC,
+    category VARCHAR(255),
+    name VARCHAR(255),
+    brand VARCHAR(255),
+    retail_price NUMERIC,
+    department VARCHAR(255),
+    sku UUID,
+    distribution_center_id INT
+);
+
+
+
+CREATE TABLE users (
+    id BIGINT PRIMARY KEY,
+    first_name VARCHAR(255),
+    last_name VARCHAR(255),
+    email VARCHAR(255),
+    age INT,
+    gender CHAR(1),
+    state VARCHAR(255),
+    street_address VARCHAR(255),
+    postal_code VARCHAR(20),
+    city VARCHAR(255),
+    country VARCHAR(255),
+    latitude NUMERIC(10, 6),
+    longitude NUMERIC(10, 6),
+    traffic_source VARCHAR(255),
+    created_at TIMESTAMPTZ
+);
+
+
+
+
