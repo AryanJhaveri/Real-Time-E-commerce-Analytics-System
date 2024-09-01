@@ -25,7 +25,7 @@ This project simulates a real-time e-commerce data processing pipeline using Apa
 ```
 
 
-##Start Kafka
+## Start Kafka
 ### 1\. Download Kafka
 
 -   Visit the [Apache Kafka website](https://kafka.apache.org/downloads).
@@ -42,7 +42,7 @@ This project simulates a real-time e-commerce data processing pipeline using Apa
 `java -version`
 
 
-##Configuration
+## Configuration
 
 ### 1\. Open the Kafka `config` folder
 
@@ -99,7 +99,7 @@ For Windows:
 `.\bin\windows\kafka-server-start.bat .\config\server.properties`
 
 
-##Creating Staging Tables in PostgreSQL
+## Creating Staging Tables in PostgreSQL
 
 Before ingesting data, staging tables need to be created in PostgreSQL to store the raw data from Kafka topics. The staging tables reflect the schema of the incoming data and act as an intermediary storage layer before the data is normalized.
 
@@ -109,7 +109,7 @@ Before ingesting data, staging tables need to be created in PostgreSQL to store 
 -   Connect to your PostgreSQL database using a tool like pgAdmin or psql and run the script to create the tables.
 
 
-##Creating Topics
+## Creating Topics
 
 ### 1\. Create New Topics
 
